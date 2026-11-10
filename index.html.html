@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="記錄一週時間，分成工作、休息、關係、娛樂、學習五類，統計佔比並引導反思。資料不留存於網頁，可匯出 PDF 與 Excel。">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>一週時間分配表</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: 延續研習簡報的樣子 — 米白紙面、深咖啡粗黑標題、陶土色小標；白卡片配淡粉框，提示區用杏色底；單一淺色主題，與簡報一致。 */
+:root{
+  --paper:#FFFDF7; --sheet:#FFFFFF; --ink:#4B3A30; --muted:#725F52; --line:#F0DCD4; --line-strong:#E3C3B6;
+  --accent:#9A5534; --accent-ink:#FFFFFF; --accent-soft:#FCEFDC; --pink-soft:#FBE3DE; --lav:#E3E8F4; --none:#EDE5DC;
+  --c-work:#9A5534; --c-rest:#5E8C3A; --c-rel:#B4486E; --c-play:#5B54C4; --c-learn:#B08530;
+  --s-work:rgba(154,85,52,.16); --s-rest:rgba(94,140,58,.18); --s-rel:rgba(180,72,110,.15); --s-play:rgba(91,84,196,.14); --s-learn:rgba(176,133,48,.20);
+  --f-display:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
+  --f-body:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;
+  --r:10px; color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;position:relative;overflow-x:hidden}
+.deco{position:absolute;inset:0 0 auto 0;height:420px;overflow:hidden;pointer-events:none;z-index:0}
+.deco i{position:absolute;border-radius:50%;display:block}
+.deco .c1{width:300px;height:300px;right:-90px;top:-140px;background:var(--pink-soft)}
+.deco .c2{width:240px;height:240px;right:12%;top:250px;background:var(--lav);opacity:.8}
+.deco .c3{width:150px;height:150px;right:calc(12% + 45px);top:300px;background:var(--accent-soft)}
+.deco .c4{width:140px;height:140px;left:-70px;top:300px;background:var(--pink-soft);opacity:.7}
+.wrap{position:relative;z-index:1}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:20px 80px;display:flex;flex-direction:column;gap:22px}
+h1,h2{font-family:var(--f-display);font-weight:900;text-wrap:balance;margin:0;line-height:1.25;letter-spacing:.02em}
+h1{font-size:clamp(30px,6vw,44px)}
+.eyebrow{font-size:12.5px;color:var(--accent);letter-spacing:.06em;font-weight:500}
+.sh{display:flex;flex-direction:column;gap:2px}
+h2{font-size:clamp(22px,4vw,28px)}
+.sub{color:var(--muted);margin:0;max-width:62ch}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line-strong);background:var(--sheet);border-radius:999px;padding:7px 14px;font-size:14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.warn{border-color:var(--c-rel);color:var(--c-rel)}
+.btn:disabled{opacity:.5;cursor:default}
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:0 1px 3px rgba(75,58,48,.05);display:flex;flex-direction:column;gap:14px;min-width:0}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between}
+.top .t{display:flex;flex-direction:column;gap:6px;min-width:0}
+.files{display:flex;flex-wrap:wrap;gap:8px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label,.lab{font-size:12.5px;color:var(--muted);letter-spacing:.04em}
+.field input,.field select{border:1px solid var(--line-strong);border-radius:8px;padding:7px 10px;background:var(--sheet);width:100%}
+.note{font-size:13.5px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tag{background:var(--pink-soft);color:var(--c-rel);border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700;letter-spacing:.04em}
+.note b{color:var(--ink);font-weight:500}
+
+.banner{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;background:var(--accent-soft);border:0;border-radius:10px;padding:14px 18px}
+.banner p{margin:0}
+
+/* marker tray */
+.tray{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--sheet);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 6px 18px -14px rgba(0,0,0,.5)}
+.brushes{display:flex;flex-wrap:wrap;gap:6px}
+.brush{border:1.5px solid transparent;border-radius:999px;padding:5px 12px 5px 8px;display:inline-flex;align-items:center;gap:7px;background:var(--paper);font-weight:500;font-size:14px}
+.brush .sw{width:18px;height:12px;border-radius:3px;transform:skewX(-12deg)}
+.brush[aria-pressed="true"]{border-color:var(--ink);background:var(--sheet)}
+.brush.erase .sw{background:repeating-linear-gradient(45deg,var(--line-strong) 0 2px,transparent 2px 5px);border:1px solid var(--line-strong)}
+.trayrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.trayrow input{flex:1 1 180px;min-width:0;border:1px solid var(--line-strong);border-radius:8px;padding:6px 10px;background:var(--sheet)}
+.hint{font-size:12.5px;color:var(--muted)}
+
+/* grid */
+.gridbox{overflow-x:auto;border:1px solid var(--line-strong);border-radius:var(--r)}
+table.grid{border-collapse:collapse;width:100%;min-width:340px;table-layout:fixed;user-select:none;-webkit-user-select:none}
+.grid th{font-weight:500;font-size:13px;padding:6px 2px;background:var(--paper);border-bottom:1px solid var(--line-strong);border-left:1px solid var(--line);line-height:1.25}
+.grid th small{display:block;color:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+.grid th.tc{width:52px;border-left:0}
+.grid td.tm{font-size:11.5px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--line);background:var(--paper);padding:0 2px;vertical-align:top}
+.grid td.cell{height:30px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);padding:2px 4px;cursor:pointer;touch-action:pan-y;vertical-align:top;overflow:hidden;position:relative}
+.grid td.cell:hover{outline:1.5px solid var(--line-strong);outline-offset:-2px}
+.grid td.joined{border-bottom-color:transparent}
+.grid td.cell span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:11.5px;line-height:1.3;word-break:break-all}
+.grid tr.half td.tm{color:transparent}
+.k-work{background:var(--s-work);box-shadow:inset 3px 0 0 var(--c-work)}
+.k-play{background:var(--s-play);box-shadow:inset 3px 0 0 var(--c-play)}
+.k-rest{background:var(--s-rest);box-shadow:inset 3px 0 0 var(--c-rest)}
+.k-rel{background:var(--s-rel);box-shadow:inset 3px 0 0 var(--c-rel)}
+.k-learn{background:var(--s-learn);box-shadow:inset 3px 0 0 var(--c-learn)}
+
+details.fill{border:1px solid var(--line);border-radius:var(--r);padding:10px 14px}
+details.fill summary{cursor:pointer;font-weight:500}
+.fillbody{display:flex;flex-direction:column;gap:10px;padding-top:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line-strong);border-radius:8px;padding:4px 10px;background:var(--sheet);font-size:14px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip.q{border-style:dashed}
+.fillrow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.fillrow .field{flex:0 1 120px}
+
+/* stats */
+.statgrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}
+@media (max-width:760px){.statgrid{grid-template-columns:1fr}}
+.bigbar{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.bigbar div{height:100%;min-width:0}
+.tot{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:var(--muted)}
+.tot b{color:var(--ink);font-size:20px;font-family:var(--f-display);font-variant-numeric:tabular-nums}
+table.st{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.st td,.st th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
+.st th{font-weight:500;color:var(--muted);font-size:12.5px}
+.st td.n,.st th.n{text-align:right}
+.st .sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px}
+.st tr.sum td{font-weight:700;border-bottom:0}
+.days{display:flex;flex-direction:column;gap:6px}
+.dayrow{display:grid;grid-template-columns:34px 1fr 52px;gap:8px;align-items:center;font-size:13px}
+.dayrow .bar{display:flex;height:16px;border-radius:4px;overflow:hidden;background:var(--none)}
+.dayrow .h{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* reflection */
+.rank{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:560px){.rank{grid-template-columns:1fr}}
+.rank ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rank li{display:grid;grid-template-columns:26px 14px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--paper)}
+.rank li .i{font-family:var(--f-display);font-weight:700;color:var(--muted);text-align:center}
+.rank li .sw{width:14px;height:14px;border-radius:3px}
+.rank li .v{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.mv{display:flex;gap:2px}
+.mv button{border:1px solid var(--line-strong);background:var(--sheet);border-radius:6px;width:30px;height:28px;font-size:12px;line-height:1}
+.mv button:disabled{opacity:.3}
+.gap{background:var(--accent-soft);border-radius:10px;padding:12px 16px;font-size:14.5px}
+.gap ul{margin:4px 0 0;padding-left:20px}
+.q{display:flex;flex-direction:column;gap:6px}
+.q label{font-weight:700;font-size:17px}
+.q .qh{font-size:13px;color:var(--muted)}
+.q textarea{border:1px solid var(--line-strong);border-radius:10px;padding:10px 12px;min-height:84px;resize:vertical;background:var(--sheet);line-height:1.6;width:100%}
+.done{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--sheet);padding:9px 16px;border-radius:999px;font-size:14px;max-width:calc(100% - 32px);z-index:20;box-shadow:0 8px 24px -10px rgba(0,0,0,.5)}
+
+/* report (PDF) — fixed light colors, rendered offscreen */
+#report{position:absolute;left:-12000px;top:0}
+.rpt{width:794px;padding:40px 44px;background:#ffffff;color:#4B3A30;font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;font-size:13px;line-height:1.55}
+.rpt h3{font-weight:900;font-size:26px;margin:0 0 4px;letter-spacing:.02em}
+.rpt .eb{font-size:11.5px;color:#9A5534;letter-spacing:.06em;margin-bottom:2px}
+.rpt h4{font-weight:700;font-size:16px;margin:18px 0 8px;color:#9A5534}
+.rpt .rm{color:#725F52;font-size:12.5px;margin-bottom:12px}
+.rpt table{border-collapse:collapse;width:100%}
+.rpt .rg td,.rpt .rg th{border:1px solid #E9D6CC;font-size:10.5px;padding:1px 3px;height:17px;overflow:hidden;white-space:nowrap}
+.rpt .rg th{background:#FCF6EE;font-weight:500}
+.rpt .rg td.tm{color:#725F52;text-align:center;width:46px;background:#FCF6EE}
+.rpt .rs td,.rpt .rs th{border-bottom:1px solid #F0DCD4;padding:5px 4px;text-align:left}
+.rpt .qa{border:1px solid #F0DCD4;border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.rpt .qa .qq{font-weight:700;margin-bottom:4px}
+.rpt .qa .aa{white-space:pre-wrap;min-height:20px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="deco" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i></div>
+<div class="wrap">
+  <header class="top">
+    <div class="t">
+      <div class="eyebrow">看見消耗・選擇生活</div>
+      <h1>一週時間分配表</h1>
+      <p class="sub">記錄一週每個時段做了什麼，分成工作、休息、關係、娛樂、學習五類。網頁會統計各類佔比，再用幾個問題陪您看看：這樣的時間分配，正帶您走向哪裡。</p>
+    </div>
+    <div class="files">
+      <label class="btn" for="importFile" tabindex="0" id="importLbl">匯入 Excel 續做</label>
+      <input type="file" id="importFile" accept=".xlsx,.xls" hidden>
+      <button class="btn" id="btnXlsx">匯出 Excel</button>
+      <button class="btn primary" id="btnPdf">匯出 PDF</button>
+    </div>
+  </header>
+
+  <div class="note"><span class="tag">不留檔</span><span>本頁<b>不會保存任何資料</b>，關閉或重新整理就會清空。想下次繼續，請先「匯出 Excel」，之後再「匯入 Excel 續做」。</span></div>
+
+  <div class="banner" id="sampleBanner">
+    <p>目前顯示的是<b>範例資料</b>，讓您先看看填好後的樣子。</p>
+    <button class="btn primary" id="btnStart">清空範例，開始我的記錄</button>
+  </div>
+
+  <section class="card">
+    <div class="sh"><div class="eyebrow">步驟一</div><h2>基本資料與記錄時段</h2></div>
+    <div class="meta">
+      <div class="field"><label for="fName">姓名</label><input id="fName" placeholder="可不填"></div>
+      <div class="field"><label for="fWeek">記錄週的週一日期</label><input id="fWeek" type="date"></div>
+      <div class="field"><label for="fStart">每天從</label><select id="fStart"></select></div>
+      <div class="field"><label for="fEnd">記錄到</label><select id="fEnd"></select></div>
+      <div class="field"><label for="fStep">每格長度</label><select id="fStep"><option value="60">1 小時</option><option value="30">30 分鐘</option></select></div>
+    </div>
+    <p class="hint" id="rangeHint"></p>
+  </section>
+
+  <section class="card">
+    <div class="sh"><div class="eyebrow">步驟二</div><h2>記錄一週的時間</h2></div>
+    <div class="tray" id="tray">
+      <div class="brushes" id="brushes" role="group" aria-label="選擇類別"></div>
+      <div class="trayrow">
+        <input id="fLabel" placeholder="活動內容（可不填），例：上班、運動、陪家人">
+        <button class="btn" id="btnUndo" disabled>↶ 復原</button>
+      </div>
+      <div class="hint">選好類別與活動內容後，點一下格子就會塗上一格；再點一次同樣的格子可取消。要填好幾格相同的時段，可用下方的「整段填入」。</div>
+    </div>
+
+    <details class="fill" id="fillBox">
+      <summary>整段填入（一次填好多天的同一時段）</summary>
+      <div class="fillbody">
+        <div class="chips" id="fillDays"></div>
+        <div class="chips">
+          <button class="chip q" data-q="wd">平日</button><button class="chip q" data-q="we">週末</button><button class="chip q" data-q="all">全選</button><button class="chip q" data-q="none">全不選</button>
+        </div>
+        <div class="fillrow">
+          <div class="field"><label for="fillFrom">從</label><select id="fillFrom"></select></div>
+          <div class="field"><label for="fillTo">到</label><select id="fillTo"></select></div>
+          <button class="btn primary" id="btnFill">用目前類別填入</button>
+        </div>
+        <div class="hint" id="fillHint"></div>
+      </div>
+    </details>
+
+    <div class="gridbox"><table class="grid" id="grid"></table></div>
+  </section>
+
+  <section class="card">
+    <div class="sh"><div class="eyebrow">步驟三・網頁自動統計</div><h2>一週的時間，分給了誰？</h2></div>
+    <div class="tot" id="tot"></div>
+    <div class="bigbar" id="bigbar" aria-hidden="true"></div>
+    <div class="statgrid">
+      <div><table class="st" id="statTable"></table></div>
+      <div class="days" id="days"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sh"><div class="eyebrow">步驟四</div><h2>停下來想一想</h2></div>
+    <div class="q">
+      <label>1. 您心目中的優先順序為何？</label>
+      <div class="qh">用 ▲▼ 排出您心裡認為最重要到最不重要的順序，右邊是這週實際投入時間的排序。</div>
+      <div class="rank">
+        <div><div class="lab">心目中的順序</div><ol id="rankMine"></ol></div>
+        <div><div class="lab">實際投入的順序</div><ol id="rankReal"></ol></div>
+      </div>
+      <div class="gap" id="gapBox"></div>
+    </div>
+    <div class="q"><label for="a1">2. 看到五類活動的佔比結果，意外嗎？滿意或不滿意的地方？想調整哪些？</label><div class="qh">哪一類比想像中多或少？哪些時段讓您有力量、想繼續保持？想多給哪一類一些時間，又可以從哪一類挪出來？</div><textarea id="a1"></textarea></div>
+    <div class="q"><label for="a2">3. 綜觀來看，這樣的時間分配會帶您朝向何方？</label><div class="qh">如果接下來一年的每一週都像這週一樣，一年後的您會是什麼樣子？那是您想去的方向嗎？</div><textarea id="a2"></textarea></div>
+    <div class="done">
+      <button class="btn primary" id="btnPdf2">匯出 PDF 留存</button>
+      <button class="btn" id="btnXlsx2">匯出 Excel（下次可匯入續做）</button>
+      <button class="btn warn" id="btnClear">全部清空</button>
+    </div>
+  </section>
+</div>
+<div id="report" aria-hidden="true"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+const CATS=[
+  {id:'work',name:'工作',hex:'#9A5534',soft:'rgba(154,85,52,.16)'},
+  {id:'rest',name:'休息',hex:'#5E8C3A',soft:'rgba(94,140,58,.18)'},
+  {id:'rel', name:'關係',hex:'#B4486E',soft:'rgba(180,72,110,.15)'},
+  {id:'play',name:'娛樂',hex:'#5B54C4',soft:'rgba(91,84,196,.14)'},
+  {id:'learn',name:'學習',hex:'#B08530',soft:'rgba(176,133,48,.20)'}];
+const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
+const NAME2ID=Object.fromEntries(CATS.map(c=>[c.name,c.id]));
+const DAYS=['週一','週二','週三','週四','週五','週六','週日'];
+const ANS=[['a1','看到五類活動的佔比結果，意外嗎？滿意或不滿意的地方？想調整哪些？'],['a2','綜觀來看，這樣的時間分配會帶您朝向何方？']];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const fmt=m=>pad(Math.floor(m/60)%24)+':'+pad(m%60);
+const fmtH=h=>(Math.round(h*10)/10).toString();
+
+function blank(){return{v:2,name:'',weekStart:'',start:8,end:24,step:60,cells:{},priority:['rel','learn','work','rest','play'],answers:{a1:'',a2:''},sample:false}}
+let S=blank();
+let brush='work', undo=[];
+
+function sample(){
+  const s=blank(); s.sample=true;
+  const set=(d,from,to,c,t)=>{for(let m=from*60;m<to*60;m+=60)s.cells[d+'|'+m]={c,t}};
+  for(let d=0;d<5;d++){
+    set(d,8,12,'work','上班');set(d,12,13,'rest','午休');set(d,13,17,'work','上班');
+    set(d,17,18,'rest','通勤');set(d,18,19,'rel','家人晚餐');
+    set(d,21,23,'play','滑手機');set(d,23,24,'rest','準備就寢');
+  }
+  set(0,19,21,'learn','線上課程');set(1,19,21,'rest','運動');set(2,19,21,'play','追劇');set(3,19,21,'work','備課');set(4,19,21,'rel','朋友聚餐');
+  set(5,8,10,'rest','睡晚一點');set(5,10,12,'rel','陪家人');set(5,12,14,'rest','午餐休息');set(5,14,17,'learn','閱讀');set(5,17,21,'rel','家族聚餐');set(5,21,24,'play','看電影');
+  set(6,8,12,'rel','陪家人');set(6,12,13,'rest','午休');set(6,13,15,'play','逛街');set(6,15,18,'work','備課');set(6,18,20,'rel','家人晚餐');
+  return s;
+}
+
+/* ---------- helpers ---------- */
+function rows(){const r=[];for(let m=S.start*60;m<S.end*60;m+=S.step)r.push(m);return r}
+function snapshot(){undo.push(JSON.stringify(S.cells));if(undo.length>40)undo.shift();$('btnUndo').disabled=false}
+function toast(msg,ms=2600){const t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,ms)}
+function dayDate(d){if(!S.weekStart)return'';const x=new Date(S.weekStart+'T00:00:00');if(isNaN(x))return'';x.setDate(x.getDate()+d);return (x.getMonth()+1)+'/'+x.getDate()}
+function weekRange(){if(!S.weekStart)return'';const a=new Date(S.weekStart+'T00:00:00');if(isNaN(a))return'';const b=new Date(a);b.setDate(b.getDate()+6);const f=x=>x.getFullYear()+'/'+(x.getMonth()+1)+'/'+x.getDate();return f(a)+' – '+f(b)}
+
+function compute(){
+  const rs=rows(),h=S.step/60,tot={none:0},perDay=[];
+  CATS.forEach(c=>tot[c.id]=0);
+  for(let d=0;d<7;d++){const pd={none:0};CATS.forEach(c=>pd[c.id]=0);
+    rs.forEach(m=>{const v=S.cells[d+'|'+m];const k=v&&CAT[v.c]?v.c:'none';pd[k]+=h;tot[k]+=h});perDay.push(pd)}
+  const total=rs.length*7*h, rec=total-tot.none;
+  const real=CATS.map(c=>c.id).sort((a,b)=>tot[b]-tot[a]||CATS.findIndex(c=>c.id===a)-CATS.findIndex(c=>c.id===b));
+  return{tot,perDay,total,rec,real,daily:rs.length*h};
+}
+const pct=(x,t)=>t?Math.round(x/t*1000)/10:0;
+
+/* ---------- settings ---------- */
+function fillSelects(){
+  $('fStart').innerHTML=Array.from({length:9},(_,i)=>i+4).map(h=>`<option value="${h}">${pad(h)}:00</option>`).join('');
+  $('fEnd').innerHTML=Array.from({length:9},(_,i)=>i+18).map(h=>`<option value="${h}">${h>=24?pad(h-24)+':00（隔天）':pad(h)+':00'}</option>`).join('');
+}
+function syncInputs(){
+  $('fName').value=S.name;$('fWeek').value=S.weekStart;$('fStart').value=S.start;$('fEnd').value=S.end;$('fStep').value=S.step;
+  ANS.forEach(([k])=>$(k).value=S.answers[k]||'');
+  $('sampleBanner').hidden=!S.sample;
+}
+function renderRangeHint(){const c=compute();$('rangeHint').textContent=`每天記錄 ${fmtH(c.daily)} 小時，一週共 ${fmtH(c.total)} 小時（${fmtH(c.daily)} × 7）。佔比以這個總時數計算。`}
+
+/* ---------- brushes ---------- */
+function renderBrushes(){
+  $('brushes').innerHTML=CATS.map(c=>`<button class="brush" data-b="${c.id}" aria-pressed="${brush===c.id}"><span class="sw" style="background:var(--c-${c.id})"></span>${c.name}</button>`).join('')+
+  `<button class="brush erase" data-b="erase" aria-pressed="${brush==='erase'}"><span class="sw"></span>橡皮擦</button>`;
+  $('fillHint').textContent=brush==='erase'?'目前是橡皮擦：會清除選取時段。':`會填入「${CAT[brush].name}」${$('fLabel').value.trim()?'・'+$('fLabel').value.trim():''}。`;
+}
+$('brushes').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;brush=b.dataset.b;renderBrushes()});
+$('fLabel').addEventListener('input',renderBrushes);
+
+/* ---------- grid ---------- */
+function renderGrid(){
+  const rs=rows();
+  let h='<thead><tr><th class="tc">時間</th>'+DAYS.map((d,i)=>`<th>${d}<small>${dayDate(i)||'&nbsp;'}</small></th>`).join('')+'</tr></thead><tbody>';
+  rs.forEach((m,ri)=>{
+    h+=`<tr class="${m%60?'half':''}"><td class="tm">${fmt(m)}</td>`;
+    for(let d=0;d<7;d++){
+      const v=S.cells[d+'|'+m],c=v&&CAT[v.c]?v:null;
+      const pv=ri>0?S.cells[d+'|'+rs[ri-1]]:null,nv=ri<rs.length-1?S.cells[d+'|'+rs[ri+1]]:null;
+      const same=x=>x&&c&&x.c===c.c&&(x.t||'')===(c.t||'');
+      const cont=same(pv),join=same(nv);
+      const title=c?`${DAYS[d]} ${fmt(m)}｜${CAT[c.c].name}${c.t?'・'+c.t:''}`:`${DAYS[d]} ${fmt(m)}`;
+      h+=`<td class="cell${c?' k-'+c.c:''}${join?' joined':''}" data-k="${d}|${m}" title="${esc(title)}">${c&&!cont&&c.t?`<span>${esc(c.t)}</span>`:''}</td>`;
+    }
+    h+='</tr>';
+  });
+  $('grid').innerHTML=h+'</tbody>';
+}
+function isSame(k){const v=S.cells[k];return brush!=='erase'&&v&&v.c===brush&&(v.t||'')===$('fLabel').value.trim()}
+function paint(k){if(brush==='erase')delete S.cells[k];else S.cells[k]={c:brush,t:$('fLabel').value.trim()}}
+function changed(){renderGrid();renderStats()}
+$('grid').addEventListener('click',e=>{
+  const td=e.target.closest('td.cell');if(!td)return;
+  const k=td.dataset.k;snapshot();
+  if(isSame(k))delete S.cells[k];else paint(k);
+  changed();
+});
+$('btnUndo').addEventListener('click',()=>{if(!undo.length)return;S.cells=JSON.parse(undo.pop());$('btnUndo').disabled=!undo.length;changed()});
+
+/* ---------- fill ---------- */
+let fillSel=[true,true,true,true,true,false,false];
+function renderFill(){
+  $('fillDays').innerHTML=DAYS.map((d,i)=>`<button class="chip" data-d="${i}" aria-pressed="${fillSel[i]}">${d}</button>`).join('');
+  const rs=rows(),f=$('fillFrom').value,t=$('fillTo').value;
+  $('fillFrom').innerHTML=rs.map(m=>`<option value="${m}">${fmt(m)}</option>`).join('');
+  $('fillTo').innerHTML=rs.map(m=>`<option value="${m+S.step}">${fmt(m+S.step)}</option>`).join('');
+  if(f&&rs.includes(+f))$('fillFrom').value=f;
+  if(t&&rs.includes(+t-S.step))$('fillTo').value=t;else $('fillTo').value=String(rs[Math.min(rs.length-1,Math.max(0,(9*60-S.start*60)/S.step))]+S.step);
+}
+$('fillDays').addEventListener('click',e=>{const b=e.target.closest('[data-d]');if(!b)return;fillSel[+b.dataset.d]=!fillSel[+b.dataset.d];renderFill()});
+document.querySelectorAll('.chip.q').forEach(b=>b.addEventListener('click',()=>{const q=b.dataset.q;fillSel=fillSel.map((_,i)=>q==='all'?true:q==='none'?false:q==='wd'?i<5:i>=5);renderFill()}));
+$('btnFill').addEventListener('click',()=>{
+  const a=+$('fillFrom').value,b=+$('fillTo').value;
+  if(!fillSel.some(Boolean)){toast('請先選擇要填入的星期');return}
+  if(b<=a){toast('結束時間要晚於開始時間');return}
+  snapshot();let n=0;
+  fillSel.forEach((on,d)=>{if(!on)return;for(let m=a;m<b;m+=S.step){paint(d+'|'+m);n++}});
+  changed();toast(brush==='erase'?`已清除 ${n} 格`:`已填入 ${n} 格「${CAT[brush].name}」`);
+});
+
+/* ---------- stats ---------- */
+function renderStats(){
+  const c=compute();
+  $('tot').innerHTML=`<span>一週總時數 <b>${fmtH(c.total)}</b> 小時</span><span>已記錄 <b>${fmtH(c.rec)}</b> 小時（${pct(c.rec,c.total)}%）</span>`;
+  $('bigbar').innerHTML=CATS.map(k=>c.tot[k.id]?`<div style="width:${c.tot[k.id]/c.total*100}%;background:var(--c-${k.id})" title="${k.name}"></div>`:'').join('')+(c.tot.none?`<div style="width:${c.tot.none/c.total*100}%;background:var(--none)" title="未記錄"></div>`:'');
+  $('statTable').innerHTML='<tr><th>類別</th><th class="n">時數</th><th class="n">佔比</th></tr>'+
+    CATS.map(k=>`<tr><td><span class="sw" style="background:var(--c-${k.id})"></span>${k.name}</td><td class="n">${fmtH(c.tot[k.id])} 小時</td><td class="n">${pct(c.tot[k.id],c.total)}%</td></tr>`).join('')+
+    `<tr><td><span class="sw" style="background:var(--none)"></span>未記錄</td><td class="n">${fmtH(c.tot.none)} 小時</td><td class="n">${pct(c.tot.none,c.total)}%</td></tr>`+
+    `<tr class="sum"><td>合計</td><td class="n">${fmtH(c.total)} 小時</td><td class="n">100%</td></tr>`;
+  $('days').innerHTML='<div class="lab">每天的樣子</div>'+c.perDay.map((pd,i)=>`<div class="dayrow"><span>${DAYS[i]}</span><div class="bar">${CATS.map(k=>pd[k.id]?`<div style="width:${pd[k.id]/c.daily*100}%;background:var(--c-${k.id})"></div>`:'').join('')}</div><span class="h">${fmtH(c.daily-pd.none)}h</span></div>`).join('');
+  renderRank(c);renderRangeHint();
+}
+function renderRank(c){
+  c=c||compute();
+  $('rankMine').innerHTML=S.priority.map((id,i)=>`<li><span class="i">${i+1}</span><span class="sw" style="background:var(--c-${id})"></span><span>${CAT[id].name}</span><span class="mv"><button data-up="${i}" aria-label="${CAT[id].name}往前" ${i===0?'disabled':''}>▲</button><button data-dn="${i}" aria-label="${CAT[id].name}往後" ${i===4?'disabled':''}>▼</button></span></li>`).join('');
+  $('rankReal').innerHTML=c.real.map((id,i)=>`<li><span class="i">${i+1}</span><span class="sw" style="background:var(--c-${id})"></span><span>${CAT[id].name}</span><span class="v">${fmtH(c.tot[id])}h・${pct(c.tot[id],c.total)}%</span></li>`).join('');
+  $('gapBox').innerHTML=gapText(c);
+}
+function gaps(c){return S.priority.map((id,i)=>({id,mine:i+1,real:c.real.indexOf(id)+1})).filter(g=>g.mine!==g.real).sort((a,b)=>Math.abs(b.mine-b.real)-Math.abs(a.mine-a.real))}
+function gapText(c){
+  if(!c.rec)return'開始記錄後，這裡會對照您心目中的順序與實際投入的順序。';
+  const g=gaps(c);
+  if(!g.length)return'您心目中的順序和實際投入的時間排序完全一致。這樣的一致，是您刻意安排的結果嗎？';
+  return'對照兩邊的順序，可以留意：<ul>'+g.slice(0,3).map(x=>`<li>「${CAT[x.id].name}」您排第 ${x.mine}，實際投入排第 ${x.real}${x.real>x.mine?'，時間比您心中的份量少':'，時間比您心中的份量多'}。</li>`).join('')+'</ul>';
+}
+document.querySelector('.rank').addEventListener('click',e=>{
+  const u=e.target.closest('[data-up]'),d=e.target.closest('[data-dn]');if(!u&&!d)return;
+  const i=u?+u.dataset.up:+d.dataset.dn,j=u?i-1:i+1;if(j<0||j>4)return;
+  [S.priority[i],S.priority[j]]=[S.priority[j],S.priority[i]];renderRank();
+  document.querySelector(`#rankMine [data-${u?'up':'dn'}="${j}"]`)?.focus();
+});
+
+/* ---------- inputs ---------- */
+$('fName').addEventListener('input',e=>S.name=e.target.value);
+$('fWeek').addEventListener('change',e=>{S.weekStart=e.target.value;renderGrid()});
+['fStart','fEnd','fStep'].forEach(id=>$(id).addEventListener('change',()=>{
+  S.start=+$('fStart').value;S.end=+$('fEnd').value;S.step=+$('fStep').value;renderFill();changed();
+}));
+ANS.forEach(([k])=>$(k).addEventListener('input',e=>S.answers[k]=e.target.value));
+$('btnStart').addEventListener('click',()=>{const keep={start:S.start,end:S.end,step:S.step};S=Object.assign(blank(),keep);undo=[];$('btnUndo').disabled=true;syncInputs();renderAll();toast('已清空，可以開始記錄了')});
+let clearArm=0;
+$('btnClear').addEventListener('click',e=>{
+  if(Date.now()-clearArm>4000){clearArm=Date.now();e.target.textContent='再按一次確定清空';setTimeout(()=>e.target.textContent='全部清空',4000);return}
+  clearArm=0;e.target.textContent='全部清空';S=blank();undo=[];$('btnUndo').disabled=true;syncInputs();renderAll();toast('已全部清空');
+});
+
+/* ---------- downloads ---------- */
+async function saveFile(filename,blob){
+  try{
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    toast('已匯出：'+filename,3200);return true;
+  }catch(err){toast('下載沒有完成，請改用電腦版瀏覽器再試',3500);return false}
+}
+function baseName(){const n=(S.name||'').trim()||'未命名';const w=S.weekStart||new Date().toISOString().slice(0,10);return `一週時間分配_${n}_${w}`.replace(/[\\/:*?"<>|]/g,'_')}
+
+/* ---------- Excel ---------- */
+async function exportXlsx(){
+  if(!window.XLSX){toast('Excel 元件尚未載入，請稍後再試');return}
+  const c=compute(),rs=rows(),wb=XLSX.utils.book_new();
+  const info=[['一週時間分配表'],['姓名',S.name],['記錄週',weekRange()||S.weekStart],['每天記錄時段',`${fmt(S.start*60)}–${fmt(S.end*60)}`],['每格長度',S.step===60?'1 小時':'30 分鐘'],[],['說明','「一週時間表」每格格式為「類別｜活動內容」。請勿刪除「_資料」工作表，下次匯入才能接續製作。']];
+  const ws0=XLSX.utils.aoa_to_sheet(info);ws0['!cols']=[{wch:14},{wch:60}];XLSX.utils.book_append_sheet(wb,ws0,'基本資料');
+  const grid=[['時間',...DAYS.map((d,i)=>dayDate(i)?`${d} ${dayDate(i)}`:d)]];
+  rs.forEach(m=>grid.push([`${fmt(m)}-${fmt(m+S.step)}`,...DAYS.map((_,d)=>{const v=S.cells[d+'|'+m];return v&&CAT[v.c]?CAT[v.c].name+(v.t?'｜'+v.t:''):''})]));
+  const ws1=XLSX.utils.aoa_to_sheet(grid);ws1['!cols']=[{wch:13},...DAYS.map(()=>({wch:16}))];XLSX.utils.book_append_sheet(wb,ws1,'一週時間表');
+  const st=[['類別','時數（小時）','佔比（%）','心目中順序','實際順序']];
+  CATS.forEach(k=>st.push([k.name,+fmtH(c.tot[k.id]),pct(c.tot[k.id],c.total),S.priority.indexOf(k.id)+1,c.real.indexOf(k.id)+1]));
+  st.push(['未記錄',+fmtH(c.tot.none),pct(c.tot.none,c.total),'','']);st.push(['合計',c.total,100,'','']);
+  st.push([]);st.push(['每日已記錄時數',...DAYS]);
+  CATS.forEach(k=>st.push([k.name,...c.perDay.map(p=>+fmtH(p[k.id]))]));
+  const ws2=XLSX.utils.aoa_to_sheet(st);ws2['!cols']=[{wch:14},{wch:12},{wch:10},{wch:10},{wch:10},{wch:8},{wch:8}];XLSX.utils.book_append_sheet(wb,ws2,'統計');
+  const rf=[['問題','我的回答'],['您心目中的優先順序',S.priority.map((id,i)=>`${i+1}.${CAT[id].name}`).join('  ')],['實際投入的順序',c.real.map((id,i)=>`${i+1}.${CAT[id].name}`).join('  ')],...ANS.map(([k,q])=>[q,S.answers[k]||''])];
+  const ws3=XLSX.utils.aoa_to_sheet(rf);ws3['!cols']=[{wch:40},{wch:80}];XLSX.utils.book_append_sheet(wb,ws3,'反思');
+  const json=JSON.stringify(Object.assign({},S,{sample:false,app:'weekly-time-allocation'}));
+  const chunks=[['weekly-time-allocation-v1']];for(let i=0;i<json.length;i+=30000)chunks.push([json.slice(i,i+30000)]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(chunks),'_資料');
+  const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  await saveFile(baseName()+'.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+}
+$('btnXlsx').addEventListener('click',exportXlsx);$('btnXlsx2').addEventListener('click',exportXlsx);
+
+$('importLbl').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('importFile').click()}});
+$('importFile').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const wb=XLSX.read(new Uint8Array(r.result),{type:'array'});
+    let ns=null;
+    const ds=wb.Sheets['_資料'];
+    if(ds){const a=XLSX.utils.sheet_to_json(ds,{header:1});if(String(a[0]?.[0]).startsWith('weekly-time-allocation')){ns=JSON.parse(a.slice(1).map(x=>x[0]||'').join(''))}}
+    if(!ns&&wb.Sheets['一週時間表'])ns=parseGrid(XLSX.utils.sheet_to_json(wb.Sheets['一週時間表'],{header:1}));
+    if(!ns)throw new Error('找不到資料');
+    S=normalize(ns);undo=[];$('btnUndo').disabled=true;syncInputs();renderAll();toast('已匯入，可以接著製作');
+  }catch(err){toast('無法讀取這個檔案。請選擇由本頁匯出的 Excel 檔',4000)}
+  e.target.value='';};
+  r.readAsArrayBuffer(f);
+});
+function parseGrid(a){
+  const s=blank(),times=[];
+  a.slice(1).forEach(row=>{const m=/^(\d{1,2}):(\d{2})/.exec(String(row[0]||''));if(!m)return;let t=+m[1]*60+ +m[2];if(times.length&&t<times[times.length-1])t+=1440;times.push(t);
+    for(let d=0;d<7;d++){const v=String(row[d+1]||'').trim();if(!v)continue;const [n,...rest]=v.split('｜');if(NAME2ID[n])s.cells[d+'|'+t]={c:NAME2ID[n],t:rest.join('｜')}}});
+  if(!times.length)return null;
+  s.step=times.length>1&&times[1]-times[0]===30?30:60;s.start=Math.floor(times[0]/60);s.end=Math.ceil((times[times.length-1]+s.step)/60);return s;
+}
+function normalize(x){
+  const s=blank();
+  s.name=String(x.name||'');s.weekStart=/^\d{4}-\d{2}-\d{2}$/.test(x.weekStart||'')?x.weekStart:'';
+  s.start=Math.min(12,Math.max(4,+x.start||8));s.end=Math.min(26,Math.max(18,+x.end||24));s.step=+x.step===30?30:60;
+  Object.entries(x.cells||{}).forEach(([k,v])=>{if(/^\d\|\d+$/.test(k)&&v&&CAT[v.c])s.cells[k]={c:v.c,t:String(v.t||'').slice(0,60)}});
+  if(Array.isArray(x.priority)&&x.priority.length===5&&CATS.every(c=>x.priority.includes(c.id)))s.priority=x.priority.slice();
+  const a=x.answers||{};
+  if(x.v!==2&&('a3' in a||'a4' in a||'a5' in a)){
+    /* 舊版（六題）檔案：意外、滿意、調整併入第 2 題；朝向何方、下週小調整併入第 3 題 */
+    const j=(...p)=>p.filter(([,t])=>String(t||'').trim()).map(([l,t])=>`【${l}】${String(t).trim()}`).join('\n');
+    s.answers.a1=j(['意外',a.a1],['滿意',a.a2],['想調整',a.a3]);
+    s.answers.a2=j(['朝向何方',a.a4],['下週小調整',a.a5]);
+  }else ANS.forEach(([k])=>s.answers[k]=String(a[k]||''));
+  return s;
+}
+
+/* ---------- PDF ---------- */
+function reportPages(){
+  const c=compute(),rs=rows(),who=esc(S.name||'（未填姓名）'),wr=esc(weekRange()||'（未填日期）');
+  const head=`<div class="rm">姓名：${who}　｜　記錄週：${wr}　｜　每天 ${fmt(S.start*60)}–${fmt(S.end*60)}，一週共 ${fmtH(c.total)} 小時</div>`;
+  let g='<table class="rg"><tr><th>時間</th>'+DAYS.map((d,i)=>`<th>${d}${dayDate(i)?' '+dayDate(i):''}</th>`).join('')+'</tr>';
+  rs.forEach((m,ri)=>{g+=`<tr><td class="tm">${fmt(m)}</td>`;for(let d=0;d<7;d++){const v=S.cells[d+'|'+m],k=v&&CAT[v.c]?CAT[v.c]:null;const pv=ri>0?S.cells[d+'|'+rs[ri-1]]:null;const cont=k&&pv&&pv.c===v.c&&(pv.t||'')===(v.t||'');
+    g+=`<td style="${k?`background:${k.soft};border-left:3px solid ${k.hex};`:''}${cont?'border-top-color:transparent;':''}">${k&&!cont?esc(v.t||k.name):''}</td>`}g+='</tr>'});
+  g+='</table>';
+  const legend=CATS.map(k=>`<span style="display:inline-flex;align-items:center;gap:5px;margin-right:14px"><span style="width:12px;height:12px;border-radius:3px;background:${k.hex};display:inline-block"></span>${k.name}</span>`).join('');
+  const p1=`<div class="rpt"><div class="eb">一週時間分配表・第 1 頁</div><h3>一週的時間紀錄</h3>${head}<div style="margin-bottom:8px;font-size:12px">${legend}</div>${g}</div>`;
+  const bar=`<div style="display:flex;height:26px;border-radius:6px;overflow:hidden;border:1px solid #F0DCD4">${CATS.map(k=>c.tot[k.id]?`<div style="width:${c.tot[k.id]/c.total*100}%;background:${k.hex}"></div>`:'').join('')}${c.tot.none?`<div style="width:${c.tot.none/c.total*100}%;background:#EDE5DC"></div>`:''}</div>`;
+  const tbl='<table class="rs"><tr><th>類別</th><th>時數</th><th>佔比</th><th>心目中順序</th><th>實際順序</th></tr>'+CATS.map(k=>`<tr><td><span style="display:inline-block;width:11px;height:11px;border-radius:3px;background:${k.hex};margin-right:6px"></span>${k.name}</td><td>${fmtH(c.tot[k.id])} 小時</td><td>${pct(c.tot[k.id],c.total)}%</td><td>${S.priority.indexOf(k.id)+1}</td><td>${c.real.indexOf(k.id)+1}</td></tr>`).join('')+`<tr><td>未記錄</td><td>${fmtH(c.tot.none)} 小時</td><td>${pct(c.tot.none,c.total)}%</td><td></td><td></td></tr><tr><td><b>合計</b></td><td><b>${fmtH(c.total)} 小時</b></td><td><b>100%</b></td><td></td><td></td></tr></table>`;
+  const days=c.perDay.map((pd,i)=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="width:34px">${DAYS[i]}</span><div style="flex:1;display:flex;height:14px;border-radius:3px;overflow:hidden;background:#F3ECE4">${CATS.map(k=>pd[k.id]?`<div style="width:${pd[k.id]/c.daily*100}%;background:${k.hex}"></div>`:'').join('')}</div><span style="width:44px;text-align:right;color:#725F52">${fmtH(c.daily-pd.none)}h</span></div>`).join('');
+  const g2=gaps(c);
+  const gapHtml=c.rec?(g2.length?'<ul style="margin:4px 0 0;padding-left:20px">'+g2.slice(0,3).map(x=>`<li>「${CAT[x.id].name}」心目中第 ${x.mine}，實際投入第 ${x.real}</li>`).join('')+'</ul>':'<div>心目中的順序與實際投入順序一致。</div>'):'';
+  const qa=[['您心目中的優先順序',S.priority.map((id,i)=>`${i+1}. ${CAT[id].name}`).join('　')+'<div style="color:#725F52;margin-top:4px">實際投入順序：'+c.real.map((id,i)=>`${i+1}. ${CAT[id].name}`).join('　')+'</div>'+gapHtml],...ANS.map(([k,q])=>[q,esc(S.answers[k]||'')||'<span style="color:#B9A79A">（未填寫）</span>'])];
+  const p2=`<div class="rpt"><div class="eb">一週時間分配表・第 2 頁</div><h3>一週的時間，分給了誰？</h3>${head}${bar}<h4>統計</h4>${tbl}<h4>每天的樣子</h4>${days}</div>`;
+  const p3=`<div class="rpt"><div class="eb">一週時間分配表・第 3 頁</div><h3>停下來想一想</h3>${head}${qa.map(([q,a],i)=>`<div class="qa"><div class="qq">${i+1}. ${q}</div><div class="aa">${a}</div></div>`).join('')}</div>`;
+  return[p1,p2,p3];
+}
+let pdfBusy=false;
+async function exportPdf(){
+  if(pdfBusy)return;
+  if(!window.html2canvas||!window.jspdf){toast('PDF 元件尚未載入，請稍後再試');return}
+  pdfBusy=true;['btnPdf','btnPdf2'].forEach(id=>$(id).disabled=true);toast('正在產生 PDF…',8000);
+  try{
+    try{await document.fonts.ready}catch(e){}
+    const doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),W=210,H=297;let first=true;
+    for(const html of reportPages()){
+      $('report').innerHTML=html;
+      const cv=await html2canvas($('report').firstElementChild,{scale:2,backgroundColor:'#ffffff',logging:false});
+      const pageH=Math.floor(cv.width*H/W);
+      for(let y=0;y<cv.height;y+=pageH){
+        const h=Math.min(pageH,cv.height-y),sc=document.createElement('canvas');sc.width=cv.width;sc.height=h;
+        const ctx=sc.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,sc.width,h);ctx.drawImage(cv,0,y,cv.width,h,0,0,cv.width,h);
+        if(!first)doc.addPage();first=false;
+        doc.addImage(sc.toDataURL('image/jpeg',0.92),'JPEG',0,0,W,h*W/cv.width);
+      }
+    }
+    $('report').innerHTML='';
+    await saveFile(baseName()+'.pdf',doc.output('blob'));
+  }catch(err){toast('PDF 產生失敗，請再試一次',3500)}
+  finally{pdfBusy=false;['btnPdf','btnPdf2'].forEach(id=>$(id).disabled=false)}
+}
+$('btnPdf').addEventListener('click',exportPdf);$('btnPdf2').addEventListener('click',exportPdf);
+
+/* ---------- init ---------- */
+function renderAll(){renderBrushes();renderFill();renderGrid();renderStats()}
+fillSelects();S=sample();syncInputs();renderAll();
+</script>
+
+</body>
+</html>
